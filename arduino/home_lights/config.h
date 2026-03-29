@@ -118,27 +118,27 @@ const char* const deviceIds[NUM_ROOMS][MAX_LIGHTS] PROGMEM = {
 //  UI LAYOUT CONSTANTS
 // ================================================================
 // Home screen room grid
-#define GRID_X1     10
-#define GRID_X2     125
-#define GRID_Y1     50
-#define GRID_Y2     165
-#define GRID_W      105
-#define GRID_H      105
+#define GRID_X1     8
+#define GRID_X2     126
+#define GRID_Y1     52
+#define GRID_Y2     162
+#define GRID_W      108
+#define GRID_H      102
 #define GRID_GAP    5
 
 // Bottom bar
-#define BAR_Y       275
-#define BAR_H       45
+#define BAR_Y       272
+#define BAR_H       48
 
 // Room screen light rows
-#define LIGHT_Y_START 50
-#define LIGHT_ROW_H   55
-#define TOGGLE_X      170
-#define TOGGLE_W      60
-#define TOGGLE_H      30
+#define LIGHT_Y_START 52
+#define LIGHT_ROW_H   58
+#define TOGGLE_X      165
+#define TOGGLE_W      65
+#define TOGGLE_H      34
 
 // Header
-#define HDR_H       40
+#define HDR_H       45
 
 // Touch debounce (ms)
 #define TOUCH_DEBOUNCE 300

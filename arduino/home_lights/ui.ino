@@ -6,13 +6,13 @@
 void drawSplash() {
   tft.fillScreen(C_BG);
   tft.setTextColor(C_ACCENT);
-  tft.setTextSize(2);
-  printCentered(F("YILDIRIM"), SCR_W / 2, 100);
+  tft.setTextSize(3);
+  printCentered(F("YILDIRIM"), SCR_W / 2, 90);
   printCentered(F("MANSION"), SCR_W / 2, 125);
   tft.setTextColor(C_DIM);
   tft.setTextSize(1);
-  printCentered(F("Home Lights Control"), SCR_W / 2, 165);
-  printCentered(F("Touch to begin..."), SCR_W / 2, 200);
+  printCentered(F("Home Lights Control"), SCR_W / 2, 175);
+  printCentered(F("Touch to begin..."), SCR_W / 2, 210);
 }
 
 // ---- Header Bar ----
@@ -20,18 +20,18 @@ void drawHeader(const __FlashStringHelper* title, bool showBack) {
   tft.fillRect(0, 0, SCR_W, HDR_H, C_HEADER);
 
   if (showBack) {
-    // Back arrow button
-    tft.fillRoundRect(5, 5, 40, 30, 4, C_DANGER);
+    // Back button - big touch target
+    tft.fillRoundRect(4, 4, 52, 38, 5, C_DANGER);
     tft.setTextColor(C_TEXT);
-    tft.setTextSize(2);
-    tft.setCursor(14, 11);
+    tft.setTextSize(3);
+    tft.setCursor(16, 10);
     tft.print(F("<"));
   }
 
   tft.setTextColor(C_ACCENT);
   tft.setTextSize(2);
-  uint8_t xOff = showBack ? 50 : 10;
-  tft.setCursor(xOff, 12);
+  uint8_t xOff = showBack ? 62 : 10;
+  tft.setCursor(xOff, 14);
   tft.print(title);
 }
 
@@ -39,17 +39,17 @@ void drawHeaderPgm(uint8_t room, bool showBack) {
   tft.fillRect(0, 0, SCR_W, HDR_H, C_HEADER);
 
   if (showBack) {
-    tft.fillRoundRect(5, 5, 40, 30, 4, C_DANGER);
+    tft.fillRoundRect(4, 4, 52, 38, 5, C_DANGER);
     tft.setTextColor(C_TEXT);
-    tft.setTextSize(2);
-    tft.setCursor(14, 11);
+    tft.setTextSize(3);
+    tft.setCursor(16, 10);
     tft.print(F("<"));
   }
 
   readPgm(getRoomName(room), pgmBuf, sizeof(pgmBuf));
   tft.setTextColor(C_ACCENT);
   tft.setTextSize(2);
-  tft.setCursor(showBack ? 50 : 10, 12);
+  tft.setCursor(showBack ? 62 : 10, 14);
   tft.print(pgmBuf);
 }
 
@@ -57,26 +57,44 @@ void drawHeaderPgm(uint8_t room, bool showBack) {
 void drawBottomBar(bool showTimer) {
   tft.fillRect(0, BAR_Y, SCR_W, BAR_H, C_HEADER);
 
-  uint8_t btnW = showTimer ? 73 : 110;
-  uint8_t btnH = 35;
+  uint8_t btnH = 38;
   uint8_t y = BAR_Y + 5;
 
-  // ALL ON
-  tft.fillRoundRect(8, y, btnW, btnH, 4, C_ON);
-  tft.setTextColor(C_TEXT);
-  tft.setTextSize(1);
-  printCentered(F("ALL ON"), 8 + btnW / 2, y + 13);
-
-  // ALL OFF
-  tft.fillRoundRect(8 + btnW + 5, y, btnW, btnH, 4, C_OFF);
-  tft.setTextColor(C_TEXT);
-  printCentered(F("ALL OFF"), 8 + btnW + 5 + btnW / 2, y + 13);
-
   if (showTimer) {
+    // 3 buttons: ALL ON (72px) + ALL OFF (72px) + TIMERS (72px) + gaps
+    uint8_t btnW = 72;
+    uint8_t gap = 6;
+    uint8_t x0 = 6;
+
+    // ALL ON
+    tft.fillRoundRect(x0, y, btnW, btnH, 5, C_ON);
+    tft.setTextColor(C_TEXT);
+    tft.setTextSize(1);
+    printCentered(F("ALL ON"), x0 + btnW / 2, y + 15);
+
+    // ALL OFF
+    tft.fillRoundRect(x0 + btnW + gap, y, btnW, btnH, 5, C_OFF);
+    tft.setTextColor(C_TEXT);
+    printCentered(F("ALL OFF"), x0 + btnW + gap + btnW / 2, y + 15);
+
     // TIMERS
-    tft.fillRoundRect(8 + (btnW + 5) * 2, y, btnW, btnH, 4, C_TIMER);
+    tft.fillRoundRect(x0 + (btnW + gap) * 2, y, btnW, btnH, 5, C_TIMER);
     tft.setTextColor(C_BG);
-    printCentered(F("TIMERS"), 8 + (btnW + 5) * 2 + btnW / 2, y + 13);
+    printCentered(F("TIMERS"), x0 + (btnW + gap) * 2 + btnW / 2, y + 15);
+  } else {
+    // 2 buttons only
+    uint8_t btnW = 110;
+    uint8_t gap = 8;
+    uint8_t x0 = 6;
+
+    tft.fillRoundRect(x0, y, btnW, btnH, 5, C_ON);
+    tft.setTextColor(C_TEXT);
+    tft.setTextSize(1);
+    printCentered(F("ALL ON"), x0 + btnW / 2, y + 15);
+
+    tft.fillRoundRect(x0 + btnW + gap, y, btnW, btnH, 5, C_OFF);
+    tft.setTextColor(C_TEXT);
+    printCentered(F("ALL OFF"), x0 + btnW + gap + btnW / 2, y + 15);
   }
 }
 
@@ -84,10 +102,9 @@ void drawBottomBar(bool showTimer) {
 void drawHomeScreen() {
   currentScreen = SCR_HOME;
   tft.fillScreen(C_BG);
-  drawHeader(F("YILDIRIM MANSION"), false);
+  drawHeader(F("YILDIRIM"), false);
   drawBottomBar(true);
 
-  // Draw room cards in 2x2 grid
   for (uint8_t i = 0; i < NUM_ROOMS; i++) {
     drawRoomCard(i);
   }
@@ -105,26 +122,35 @@ void drawRoomCard(uint8_t room) {
 
   // Card background
   uint16_t cardColor = anyOn ? C_ON : C_CARD;
-  tft.fillRoundRect(x, y, GRID_W, GRID_H, 6, cardColor);
-  tft.drawRoundRect(x, y, GRID_W, GRID_H, 6, C_BORDER);
+  tft.fillRoundRect(x, y, GRID_W, GRID_H, 8, cardColor);
+  tft.drawRoundRect(x, y, GRID_W, GRID_H, 8, C_BORDER);
 
-  // Light bulb icon
-  uint16_t iconColor = anyOn ? C_TEXT : C_DIM;
   int16_t cx = x + GRID_W / 2;
-  int16_t cy = y + 30;
-  tft.fillCircle(cx, cy, 12, iconColor);
-  tft.fillRect(cx - 5, cy + 10, 10, 8, iconColor);
 
-  // Room name
+  // Light bulb icon (centered, upper area)
+  uint16_t iconColor = anyOn ? C_TEXT : C_DIM;
+  tft.fillCircle(cx, y + 28, 14, iconColor);
+  tft.fillRect(cx - 6, y + 40, 12, 8, iconColor);
+  // Bulb base lines
+  uint16_t lineColor = anyOn ? cardColor : C_BG;
+  tft.drawFastHLine(cx - 4, y + 42, 8, lineColor);
+  tft.drawFastHLine(cx - 4, y + 44, 8, lineColor);
+
+  // Room name (below icon with gap)
   readPgm(getRoomName(room), pgmBuf, sizeof(pgmBuf));
   tft.setTextColor(anyOn ? C_BG : C_TEXT);
   tft.setTextSize(1);
   printCentered(pgmBuf, cx, y + 62);
 
-  // Status: "2/3 ON"
+  // Status: "2/3 ON" or "OFF"
   char statusBuf[10];
-  snprintf(statusBuf, sizeof(statusBuf), "%d/%d %s", onCount, total, anyOn ? "ON" : "OFF");
+  if (anyOn) {
+    snprintf(statusBuf, sizeof(statusBuf), "%d/%d ON", onCount, total);
+  } else {
+    snprintf(statusBuf, sizeof(statusBuf), "%d OFF", total);
+  }
   tft.setTextColor(anyOn ? C_BG : C_DIM);
+  tft.setTextSize(1);
   printCentered(statusBuf, cx, y + 82);
 }
 
@@ -143,43 +169,46 @@ void drawRoomScreen() {
 
 void drawLightRow(uint8_t light) {
   int16_t y = LIGHT_Y_START + light * LIGHT_ROW_H;
+  int16_t rowH = LIGHT_ROW_H - 6;  // gap between rows
   bool isOn = lightState[selectedRoom][light];
 
   // Row background
-  tft.fillRoundRect(8, y, SCR_W - 16, LIGHT_ROW_H - 5, 4, C_CARD);
+  tft.fillRoundRect(6, y, SCR_W - 12, rowH, 6, C_CARD);
 
-  // Status dot
-  tft.fillCircle(25, y + (LIGHT_ROW_H - 5) / 2, 6, isOn ? C_ON : C_OFF);
+  // Status dot (vertically centered)
+  int16_t dotY = y + rowH / 2;
+  tft.fillCircle(24, dotY, 7, isOn ? C_ON : C_OFF);
 
-  // Light name
+  // Light name (vertically centered)
   readPgm(getLightName(selectedRoom, light), pgmBuf, sizeof(pgmBuf));
   tft.setTextColor(C_TEXT);
-  tft.setTextSize(1);
-  tft.setCursor(38, y + 10);
+  tft.setTextSize(2);
+  tft.setCursor(38, y + rowH / 2 - 8);
   tft.print(pgmBuf);
 
-  // Timer indicator (small clock icon area)
+  // Timer indicator
   if (hasTimer(selectedRoom, light)) {
     tft.setTextColor(C_TIMER);
-    tft.setCursor(38, y + 28);
-    tft.print(F("timer"));
+    tft.setTextSize(1);
+    tft.setCursor(38, y + rowH / 2 + 10);
+    tft.print(F("timer active"));
   }
 
-  // Toggle button
-  drawToggleBtn(TOGGLE_X, y + 8, isOn);
+  // Toggle button (vertically centered)
+  int16_t toggleY = y + (rowH - TOGGLE_H) / 2;
+  drawToggleBtn(TOGGLE_X, toggleY, isOn);
 }
 
 void drawToggleBtn(int16_t x, int16_t y, bool isOn) {
   uint16_t bgColor = isOn ? C_ON : C_OFF;
-  tft.fillRoundRect(x, y, TOGGLE_W, TOGGLE_H, 4, bgColor);
+  tft.fillRoundRect(x, y, TOGGLE_W, TOGGLE_H, 5, bgColor);
+  tft.drawRoundRect(x, y, TOGGLE_W, TOGGLE_H, 5, C_BORDER);
   tft.setTextColor(C_TEXT);
   tft.setTextSize(2);
   if (isOn) {
-    tft.setCursor(x + 12, y + 7);
-    tft.print(F("ON"));
+    printCentered(F("ON"), x + TOGGLE_W / 2, y + 9);
   } else {
-    tft.setCursor(x + 6, y + 7);
-    tft.print(F("OFF"));
+    printCentered(F("OFF"), x + TOGGLE_W / 2, y + 9);
   }
 }
 
@@ -190,12 +219,16 @@ void drawTimerSetScreen() {
   drawHeader(F("Set Timer"), true);
 
   // Show which light
-  readPgm(getLightName(selectedRoom, selectedLight), pgmBuf, sizeof(pgmBuf));
+  readPgm(getRoomName(selectedRoom), pgmBuf, sizeof(pgmBuf));
   tft.setTextColor(C_DIM);
   tft.setTextSize(1);
   tft.setCursor(15, 55);
-  tft.print(F("Light: "));
+  tft.print(pgmBuf);
+  tft.print(F(" > "));
+  readPgm(getLightName(selectedRoom, selectedLight), pgmBuf, sizeof(pgmBuf));
   tft.setTextColor(C_TEXT);
+  tft.setTextSize(2);
+  tft.setCursor(15, 70);
   tft.print(pgmBuf);
 
   drawTimerAction();
@@ -203,100 +236,99 @@ void drawTimerSetScreen() {
   drawTimerMinutes();
 
   // START button
-  tft.fillRoundRect(15, 260, 100, 40, 6, C_ON);
+  tft.fillRoundRect(15, 260, 100, 44, 6, C_ON);
   tft.setTextColor(C_TEXT);
   tft.setTextSize(2);
-  printCentered(F("START"), 65, 273);
+  printCentered(F("START"), 65, 274);
 
   // CANCEL button
-  tft.fillRoundRect(125, 260, 100, 40, 6, C_DANGER);
+  tft.fillRoundRect(125, 260, 100, 44, 6, C_DANGER);
   tft.setTextColor(C_TEXT);
-  printCentered(F("CANCEL"), 175, 273);
+  printCentered(F("CANCEL"), 175, 274);
 }
 
 void drawTimerAction() {
-  int16_t y = 90;
-  // Clear area
-  tft.fillRect(15, y, SCR_W - 30, 35, C_BG);
+  int16_t y = 100;
+  tft.fillRect(15, y, SCR_W - 30, 38, C_BG);
 
   tft.setTextColor(C_DIM);
   tft.setTextSize(1);
-  tft.setCursor(15, y + 5);
+  tft.setCursor(15, y + 10);
   tft.print(F("Action:"));
 
   // Action toggle button
   uint16_t color = tmpTimerAction ? C_ON : C_OFF;
-  tft.fillRoundRect(90, y, 120, 28, 4, color);
+  tft.fillRoundRect(90, y + 2, 125, 34, 5, color);
   tft.setTextColor(C_TEXT);
   tft.setTextSize(2);
   if (tmpTimerAction) {
-    printCentered(F("Turn ON"), 150, y + 6);
+    printCentered(F("Turn ON"), 152, y + 10);
   } else {
-    printCentered(F("Turn OFF"), 150, y + 6);
+    printCentered(F("Turn OFF"), 152, y + 10);
   }
 }
 
 void drawTimerHours() {
-  int16_t y = 140;
-  tft.fillRect(15, y, SCR_W - 30, 40, C_BG);
+  int16_t y = 150;
+  tft.fillRect(15, y, SCR_W - 30, 42, C_BG);
 
   tft.setTextColor(C_DIM);
   tft.setTextSize(1);
-  tft.setCursor(15, y + 12);
+  tft.setCursor(15, y + 14);
   tft.print(F("Hours:"));
 
   // [-] button
-  tft.fillRoundRect(90, y + 2, 35, 35, 4, C_CARD);
+  tft.fillRoundRect(90, y + 2, 38, 38, 5, C_CARD);
   tft.setTextColor(C_TEXT);
-  tft.setTextSize(2);
-  tft.setCursor(102, y + 10);
+  tft.setTextSize(3);
+  tft.setCursor(100, y + 8);
   tft.print(F("-"));
 
   // Value
-  tft.fillRect(130, y + 2, 40, 35, C_BG);
+  tft.fillRect(133, y + 2, 44, 38, C_BG);
   tft.setTextColor(C_TEXT);
   tft.setTextSize(3);
   char buf[4];
   snprintf(buf, sizeof(buf), "%02d", tmpTimerHours);
-  printCentered(buf, 150, y + 8);
+  printCentered(buf, 155, y + 9);
 
   // [+] button
-  tft.fillRoundRect(175, y + 2, 35, 35, 4, C_CARD);
+  tft.fillRoundRect(182, y + 2, 38, 38, 5, C_CARD);
   tft.setTextColor(C_TEXT);
-  tft.setTextSize(2);
-  tft.setCursor(185, y + 10);
+  tft.setTextSize(3);
+  tft.setCursor(190, y + 8);
   tft.print(F("+"));
 }
 
 void drawTimerMinutes() {
-  int16_t y = 195;
-  tft.fillRect(15, y, SCR_W - 30, 40, C_BG);
+  int16_t y = 202;
+  tft.fillRect(15, y, SCR_W - 30, 42, C_BG);
 
   tft.setTextColor(C_DIM);
   tft.setTextSize(1);
-  tft.setCursor(15, y + 12);
+  tft.setCursor(15, y + 14);
   tft.print(F("Mins:"));
 
   // [-] button
-  tft.fillRoundRect(90, y + 2, 35, 35, 4, C_CARD);
+  tft.fillRoundRect(90, y + 2, 38, 38, 5, C_CARD);
   tft.setTextColor(C_TEXT);
-  tft.setTextSize(2);
-  tft.setCursor(102, y + 10);
+  tft.setTextSize(3);
+  tft.setCursor(100, y + 8);
   tft.print(F("-"));
 
   // Value
-  tft.fillRect(130, y + 2, 40, 35, C_BG);
+  tft.fillRect(133, y + 2, 44, 38, C_BG);
   tft.setTextColor(C_TEXT);
   tft.setTextSize(3);
   char buf[4];
   snprintf(buf, sizeof(buf), "%02d", tmpTimerMins);
-  printCentered(buf, 150, y + 8);
+  printCentered(buf, 155, y + 9);
 
   // [+] button
-  tft.fillRoundRect(175, y + 2, 35, 35, 4, C_CARD);
+  tft.fillRoundRect(182, y + 2, 38, 38, 5, C_CARD);
   tft.setTextColor(C_TEXT);
-  tft.setTextSize(2);
-  tft.setCursor(185, y + 10);
+  tft.setTextSize(3);
+  tft.setCursor(190, y + 8);
   tft.print(F("+"));
 }
 
@@ -308,8 +340,9 @@ void drawTimerListScreen() {
 
   if (timerCount == 0) {
     tft.setTextColor(C_DIM);
-    tft.setTextSize(1);
-    printCentered(F("No active timers"), SCR_W / 2, 150);
+    tft.setTextSize(2);
+    printCentered(F("No active"), SCR_W / 2, 130);
+    printCentered(F("timers"), SCR_W / 2, 155);
     return;
   }
 
@@ -322,18 +355,18 @@ void drawTimerListScreen() {
 }
 
 void drawTimerListRow(uint8_t timerIdx, uint8_t row) {
-  int16_t y = 50 + row * 60;
+  int16_t y = 55 + row * 55;
 
-  tft.fillRoundRect(8, y, SCR_W - 16, 52, 4, C_CARD);
+  tft.fillRoundRect(6, y, SCR_W - 12, 48, 5, C_CARD);
 
   // Light name
   readPgm(getLightName(timers[timerIdx].room, timers[timerIdx].light), pgmBuf, sizeof(pgmBuf));
   tft.setTextColor(C_TEXT);
   tft.setTextSize(1);
-  tft.setCursor(15, y + 8);
+  tft.setCursor(14, y + 8);
   tft.print(pgmBuf);
 
-  // Action and remaining time
+  // Remaining time
   unsigned long remaining = 0;
   unsigned long now = millis();
   if (timers[timerIdx].triggerAt > now) {
@@ -343,18 +376,18 @@ void drawTimerListRow(uint8_t timerIdx, uint8_t row) {
   uint8_t secs = remaining % 60;
 
   tft.setTextColor(C_TIMER);
-  tft.setCursor(15, y + 22);
-  tft.print(timers[timerIdx].action ? F("ON in ") : F("OFF in "));
+  tft.setTextSize(2);
+  tft.setCursor(14, y + 22);
+  tft.print(timers[timerIdx].action ? F("ON ") : F("OFF "));
   char timeBuf[10];
-  snprintf(timeBuf, sizeof(timeBuf), "%dm %ds", mins, secs);
+  snprintf(timeBuf, sizeof(timeBuf), "%dm%ds", mins, secs);
   tft.print(timeBuf);
 
-  // Cancel button [X]
-  tft.fillRoundRect(SCR_W - 50, y + 10, 35, 30, 4, C_DANGER);
+  // Cancel [X] button
+  tft.fillRoundRect(SCR_W - 48, y + 8, 38, 32, 5, C_DANGER);
   tft.setTextColor(C_TEXT);
   tft.setTextSize(2);
-  tft.setCursor(SCR_W - 42, y + 16);
-  tft.print(F("X"));
+  printCentered(F("X"), SCR_W - 29, y + 16);
 }
 
 // ---- Helper: centered text ----

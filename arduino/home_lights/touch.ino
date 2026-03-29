@@ -17,12 +17,10 @@ void handleTouch() {
   if (now - lastTouchTime < TOUCH_DEBOUNCE) return;
   lastTouchTime = now;
 
-  // Map touch coordinates to screen pixels
-  // NOTE: x/y mapping depends on your shield and rotation.
-  // If touch seems mirrored or rotated, swap tp.x/tp.y
-  // or change the map() ranges below.
-  int16_t px = map(tp.y, TS_LEFT, TS_RIGHT, 0, SCR_W);
-  int16_t py = map(tp.x, TS_TOP, TS_BOTTOM, 0, SCR_H);
+  // Map raw touch to screen pixels
+  // tp.x → screen X (left/right), tp.y → screen Y (top/bottom)
+  int16_t px = map(tp.x, TS_LEFT, TS_RIGHT, 0, SCR_W);
+  int16_t py = map(tp.y, TS_TOP, TS_BOTTOM, 0, SCR_H);
 
   // Clamp to screen bounds
   px = constrain(px, 0, SCR_W - 1);
@@ -60,21 +58,16 @@ void touchHome(int16_t px, int16_t py) {
     }
   }
 
-  // Bottom bar
+  // Bottom bar (3 buttons: 72px wide, 6px gap, starting at x=6)
   if (py >= BAR_Y) {
-    uint8_t btnW = 73;
     int16_t y = BAR_Y + 5;
-
-    if (inRect(px, py, 8, y, btnW, 35)) {
-      // ALL ON
+    if (inRect(px, py, 6, y, 72, 38)) {
       setAllLights(1);
       drawHomeScreen();
-    } else if (inRect(px, py, 8 + btnW + 5, y, btnW, 35)) {
-      // ALL OFF
+    } else if (inRect(px, py, 84, y, 72, 38)) {
       setAllLights(0);
       drawHomeScreen();
-    } else if (inRect(px, py, 8 + (btnW + 5) * 2, y, btnW, 35)) {
-      // TIMERS
+    } else if (inRect(px, py, 162, y, 72, 38)) {
       drawTimerListScreen();
     }
   }
@@ -85,29 +78,31 @@ void touchHome(int16_t px, int16_t py) {
 // ================================================================
 void touchRoom(int16_t px, int16_t py) {
   // Back button
-  if (inRect(px, py, 5, 5, 40, 30)) {
+  if (inRect(px, py, 4, 4, 52, 38)) {
     drawHomeScreen();
     return;
   }
 
-  // Light toggle buttons
+  // Light toggle buttons and rows
   uint8_t count = getLightCount(selectedRoom);
   for (uint8_t i = 0; i < count; i++) {
     int16_t y = LIGHT_Y_START + i * LIGHT_ROW_H;
+    int16_t rowH = LIGHT_ROW_H - 6;
+    int16_t toggleY = y + (rowH - TOGGLE_H) / 2;
 
     // Toggle ON/OFF button
-    if (inRect(px, py, TOGGLE_X, y + 8, TOGGLE_W, TOGGLE_H)) {
+    if (inRect(px, py, TOGGLE_X, toggleY, TOGGLE_W, TOGGLE_H)) {
       toggleLight(selectedRoom, i);
       drawLightRow(i);
       return;
     }
 
-    // Tap on the row (not the toggle) to set timer for this light
-    if (inRect(px, py, 8, y, TOGGLE_X - 15, LIGHT_ROW_H - 5)) {
+    // Tap on the row (not the toggle) to set timer
+    if (inRect(px, py, 6, y, TOGGLE_X - 10, rowH)) {
       selectedLight = i;
       tmpTimerHours = 0;
       tmpTimerMins = 30;
-      tmpTimerAction = lightState[selectedRoom][i] ? 0 : 1; // opposite of current
+      tmpTimerAction = lightState[selectedRoom][i] ? 0 : 1;
       drawTimerSetScreen();
       return;
     }
@@ -115,19 +110,14 @@ void touchRoom(int16_t px, int16_t py) {
 
   // Bottom bar
   if (py >= BAR_Y) {
-    uint8_t btnW = 73;
     int16_t y = BAR_Y + 5;
-
-    if (inRect(px, py, 8, y, btnW, 35)) {
-      // ALL ON in this room
+    if (inRect(px, py, 6, y, 72, 38)) {
       setRoomLights(selectedRoom, 1);
       drawRoomScreen();
-    } else if (inRect(px, py, 8 + btnW + 5, y, btnW, 35)) {
-      // ALL OFF in this room
+    } else if (inRect(px, py, 84, y, 72, 38)) {
       setRoomLights(selectedRoom, 0);
       drawRoomScreen();
-    } else if (inRect(px, py, 8 + (btnW + 5) * 2, y, btnW, 35)) {
-      // TIMERS
+    } else if (inRect(px, py, 162, y, 72, 38)) {
       drawTimerListScreen();
     }
   }
@@ -138,48 +128,48 @@ void touchRoom(int16_t px, int16_t py) {
 // ================================================================
 void touchTimerSet(int16_t px, int16_t py) {
   // Back button
-  if (inRect(px, py, 5, 5, 40, 30)) {
+  if (inRect(px, py, 4, 4, 52, 38)) {
     drawRoomScreen();
     return;
   }
 
-  // Action toggle
-  if (inRect(px, py, 90, 90, 120, 28)) {
+  // Action toggle (y=100, h=34)
+  if (inRect(px, py, 90, 102, 125, 34)) {
     tmpTimerAction = !tmpTimerAction;
     drawTimerAction();
     return;
   }
 
-  // Hours [-]
-  if (inRect(px, py, 90, 142, 35, 35)) {
+  // Hours [-] (y=150)
+  if (inRect(px, py, 90, 152, 38, 38)) {
     if (tmpTimerHours > 0) tmpTimerHours--;
     drawTimerHours();
     return;
   }
   // Hours [+]
-  if (inRect(px, py, 175, 142, 35, 35)) {
+  if (inRect(px, py, 182, 152, 38, 38)) {
     if (tmpTimerHours < 23) tmpTimerHours++;
     drawTimerHours();
     return;
   }
 
-  // Minutes [-]
-  if (inRect(px, py, 90, 197, 35, 35)) {
+  // Minutes [-] (y=202)
+  if (inRect(px, py, 90, 204, 38, 38)) {
     if (tmpTimerMins > 0) tmpTimerMins -= 5;
     else if (tmpTimerHours > 0) { tmpTimerHours--; tmpTimerMins = 55; drawTimerHours(); }
     drawTimerMinutes();
     return;
   }
   // Minutes [+]
-  if (inRect(px, py, 175, 197, 35, 35)) {
+  if (inRect(px, py, 182, 204, 38, 38)) {
     tmpTimerMins += 5;
     if (tmpTimerMins >= 60) { tmpTimerMins = 0; tmpTimerHours++; drawTimerHours(); }
     drawTimerMinutes();
     return;
   }
 
-  // START button
-  if (inRect(px, py, 15, 260, 100, 40)) {
+  // START button (y=260, h=44)
+  if (inRect(px, py, 15, 260, 100, 44)) {
     unsigned long delayMs = ((unsigned long)tmpTimerHours * 3600 + (unsigned long)tmpTimerMins * 60) * 1000;
     if (delayMs > 0) {
       addTimer(selectedRoom, selectedLight, tmpTimerAction, delayMs);
@@ -189,7 +179,7 @@ void touchTimerSet(int16_t px, int16_t py) {
   }
 
   // CANCEL button
-  if (inRect(px, py, 125, 260, 100, 40)) {
+  if (inRect(px, py, 125, 260, 100, 44)) {
     drawRoomScreen();
     return;
   }
@@ -200,7 +190,7 @@ void touchTimerSet(int16_t px, int16_t py) {
 // ================================================================
 void touchTimerList(int16_t px, int16_t py) {
   // Back button
-  if (inRect(px, py, 5, 5, 40, 30)) {
+  if (inRect(px, py, 4, 4, 52, 38)) {
     if (currentScreen == SCR_TIMER_LIST) {
       drawHomeScreen();
     }
@@ -211,9 +201,9 @@ void touchTimerList(int16_t px, int16_t py) {
   uint8_t row = 0;
   for (uint8_t i = 0; i < MAX_TIMERS && row < 4; i++) {
     if (!timers[i].active) continue;
-    int16_t y = 50 + row * 60;
+    int16_t y = 55 + row * 55;
 
-    if (inRect(px, py, SCR_W - 50, y + 10, 35, 30)) {
+    if (inRect(px, py, SCR_W - 48, y + 8, 38, 32)) {
       cancelTimer(i);
       drawTimerListScreen();
       return;
