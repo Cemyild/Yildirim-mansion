@@ -51,10 +51,10 @@ server/
 ### 1. Arduino Setup (Standalone - no WiFi needed)
 
 1. Install Arduino IDE
-2. Install libraries via Library Manager:
-   - `MCUFRIEND_kbv`
-   - `Adafruit GFX Library`
-   - `TouchScreen`
+2. Install libraries via Library Manager (Sketch > Include Library > Manage Libraries):
+   - Search **MCUFRIEND_kbv** and install
+   - Search **Adafruit GFX Library** and install
+   - Search **Adafruit TouchScreen** and install (the header is `TouchScreen.h` but the library name in the manager is "Adafruit TouchScreen")
 3. Open `arduino/home_lights/home_lights.ino`
 4. Upload to Arduino UNO
 5. The touchscreen UI will work immediately (toggles on-screen state only)
