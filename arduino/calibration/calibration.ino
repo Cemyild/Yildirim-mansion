@@ -1,12 +1,15 @@
 // ================================================================
-//  Touch Auto-Detect & Calibration Tool
-//  for 2.4" ILI9341 TFT Shield (MCUFRIEND)
+//  Touch Calibration Tool for MCUFRIEND 2.4" ILI9341 TFT Shield
 //
-//  This sketch automatically tries different pin configurations
-//  to find which one your touchscreen uses, then enters
-//  calibration mode to collect min/max values.
+//  1. Upload this sketch
+//  2. Open Serial Monitor (9600 baud)
+//  3. Touch the screen - X/Y/Z values appear on screen + Serial
+//  4. Touch all 4 corners and the center
+//  5. After 20+ touches, calibration values print on Serial
+//  6. Copy the #define lines into home_lights/config.h
 //
-//  Just upload and touch the screen when prompted!
+//  IF NO TOUCH IS DETECTED: Try uncommenting a different pin
+//  configuration below (Option B, C, or D) and re-upload.
 // ================================================================
 
 #include <MCUFRIEND_kbv.h>
@@ -15,33 +18,46 @@
 
 MCUFRIEND_kbv tft;
 
-// ---- PIN CONFIGURATIONS TO TRY ----
-// Each config: {XP, YP, XM, YM}
-// We try the most common ones for 2.4" shields
+// ================================================================
+//  PIN CONFIGURATION - Try one at a time, re-upload if no touch
+// ================================================================
 
-struct PinConfig {
-  uint8_t xp, yp, xm, ym;
-  const char* label;
-};
+// Option A: Standard for ILI9341 2.4" shields (try this first)
+#define YP A1
+#define XM A2
+#define YM 7
+#define XP 6
 
-const PinConfig configs[] = {
-  { 6,  A1, A2, 7,  "YP=A1 XM=A2 YM=7 XP=6"  },  // Most common 2.4"
-  { 8,  A3, A2, 9,  "YP=A3 XM=A2 YM=9 XP=8"  },  // Some shields
-  { 9,  A2, A3, 8,  "YP=A2 XM=A3 YM=8 XP=9"  },  // Alternate wiring
-  { 6,  A2, A1, 7,  "YP=A2 XM=A1 YM=7 XP=6"  },  // Swapped analog
-};
-const uint8_t NUM_CONFIGS = sizeof(configs) / sizeof(configs[0]);
+// Option B: If Option A gives no touch response, comment out A
+//           and uncomment these:
+// #define YP A3
+// #define XM A2
+// #define YM 9
+// #define XP 8
+
+// Option C:
+// #define YP A2
+// #define XM A3
+// #define YM 8
+// #define XP 9
+
+// Option D:
+// #define YP A2
+// #define XM A1
+// #define YM 7
+// #define XP 6
+
+// ================================================================
 
 #define PRESSURE_MIN 200
 #define PRESSURE_MAX 1000
-#define CONFIRM_READS 3  // require 3 consecutive reads to confirm real touch
 
-// Found config index (-1 = not found yet)
-int8_t foundConfig = -1;
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 // Calibration tracking
 int16_t minX = 9999, maxX = 0, minY = 9999, maxY = 0;
 uint16_t sampleCount = 0;
+bool screenDirty = false;
 
 void setup() {
   Serial.begin(9600);
@@ -57,290 +73,113 @@ void setup() {
   Serial.print(tft.width());
   Serial.print(F("x"));
   Serial.println(tft.height());
+  Serial.println();
+  Serial.println(F("Touch the screen. Values will appear here."));
+  Serial.println(F("Touch all 4 corners for best calibration."));
+  Serial.println();
 
-  scanForTouch();
+  drawScreen();
 }
 
-// ---- PHASE 1: Auto-detect which pin config works ----
-void scanForTouch() {
+void drawScreen() {
   tft.fillScreen(0x0000);
-  tft.setTextColor(0x07E0);
+
+  // Title
+  tft.setTextColor(0x07E0);  // green
   tft.setTextSize(2);
-  tft.setCursor(10, 10);
-  tft.print(F("AUTO-DETECT"));
+  tft.setCursor(15, 10);
+  tft.print(F("CALIBRATION"));
+
+  // Instructions
   tft.setTextColor(0xFFFF);
   tft.setTextSize(1);
   tft.setCursor(10, 40);
-  tft.print(F("Hold your finger on the"));
+  tft.print(F("Touch the screen anywhere."));
   tft.setCursor(10, 55);
-  tft.print(F("screen and KEEP PRESSING..."));
+  tft.print(F("Values shown below + Serial."));
 
-  Serial.println(F("\nScanning pin configurations..."));
-  Serial.println(F("Press and hold the screen!\n"));
+  tft.setTextColor(0xFFE0);  // yellow
+  tft.setCursor(10, 75);
+  tft.print(F("Touch all 4 corners for"));
+  tft.setCursor(10, 88);
+  tft.print(F("best calibration results."));
 
-  for (uint8_t i = 0; i < NUM_CONFIGS; i++) {
-    // Show which config we're testing
-    tft.fillRect(0, 80, 240, 100, 0x0000);
-    tft.setTextColor(0xFFE0);  // yellow
-    tft.setTextSize(2);
-    tft.setCursor(10, 85);
-    tft.print(F("Config "));
-    tft.print(i + 1);
-    tft.print(F("/"));
-    tft.print(NUM_CONFIGS);
+  // Corner targets
+  tft.fillCircle(10, 110, 4, 0xF800);
+  tft.fillCircle(229, 110, 4, 0xF800);
+  tft.fillCircle(10, 260, 4, 0xF800);
+  tft.fillCircle(229, 260, 4, 0xF800);
 
-    tft.setTextColor(0xBDF7);
-    tft.setTextSize(1);
-    tft.setCursor(10, 115);
-    tft.print(configs[i].label);
-
-    tft.setTextColor(0x07E0);
-    tft.setTextSize(2);
-    tft.setCursor(10, 145);
-    tft.print(F("Touch NOW..."));
-
-    Serial.print(F("Testing config "));
-    Serial.print(i + 1);
-    Serial.print(F(": "));
-    Serial.println(configs[i].label);
-
-    // Create a TouchScreen with this config and test for 4 seconds
-    TouchScreen testTs(configs[i].xp, configs[i].yp, configs[i].xm, configs[i].ym, 300);
-    uint8_t confirmCount = 0;
-
-    // First, check for false positives WITHOUT touching (1 second)
-    unsigned long start = millis();
-    bool falsePositive = false;
-    while (millis() - start < 1000) {
-      TSPoint tp = testTs.getPoint();
-      pinMode(configs[i].xm, OUTPUT);
-      pinMode(configs[i].yp, OUTPUT);
-      if (tp.z > PRESSURE_MIN && tp.z < PRESSURE_MAX) {
-        falsePositive = true;
-        break;
-      }
-      delay(50);
-    }
-    if (falsePositive) {
-      tft.fillRect(10, 145, 220, 20, 0x0000);
-      tft.setTextColor(0xF800);
-      tft.setTextSize(1);
-      tft.setCursor(10, 150);
-      tft.print(F("False reads - skipping"));
-      Serial.println(F("  -> False positives, skipping"));
-      delay(500);
-      continue;
-    }
-
-    // Now prompt user to touch (3 seconds)
-    tft.fillRect(10, 145, 220, 20, 0x0000);
-    tft.setTextColor(0x07E0);
-    tft.setTextSize(2);
-    tft.setCursor(10, 145);
-    tft.print(F("Touch NOW..."));
-
-    start = millis();
-    while (millis() - start < 3000) {
-      TSPoint tp = testTs.getPoint();
-
-      // Restore pin modes for LCD
-      pinMode(configs[i].xm, OUTPUT);
-      pinMode(configs[i].yp, OUTPUT);
-
-      if (tp.z > PRESSURE_MIN && tp.z < PRESSURE_MAX) {
-        confirmCount++;
-      } else {
-        confirmCount = 0;  // reset - need consecutive reads
-      }
-
-      if (confirmCount >= CONFIRM_READS) {
-        // Confirmed real touch!
-        foundConfig = i;
-
-        Serial.print(F("** FOUND! Config "));
-        Serial.print(i + 1);
-        Serial.println(F(" works! **"));
-        Serial.print(F("Pins: "));
-        Serial.println(configs[i].label);
-        Serial.print(F("First reading: X="));
-        Serial.print(tp.x);
-        Serial.print(F(" Y="));
-        Serial.print(tp.y);
-        Serial.print(F(" Z="));
-        Serial.println(tp.z);
-
-        showFound(i);
-        return;
-      }
-
-      delay(50);
-    }
-
-    // Show "no touch" for this config
-    tft.fillRect(10, 145, 220, 20, 0x0000);
-    tft.setTextColor(0xF800);  // red
-    tft.setTextSize(1);
-    tft.setCursor(10, 150);
-    tft.print(F("No touch detected"));
-    Serial.println(F("  -> No touch detected"));
-    delay(500);
-  }
-
-  // None found
-  showNotFound();
-}
-
-void showFound(uint8_t idx) {
-  tft.fillScreen(0x0000);
-
-  tft.setTextColor(0x07E0);
-  tft.setTextSize(2);
-  tft.setCursor(10, 10);
-  tft.print(F("FOUND!"));
-
-  tft.setTextColor(0xFFFF);
+  // Value labels
+  tft.setTextColor(0x8410);
   tft.setTextSize(1);
-  tft.setCursor(10, 40);
-  tft.print(F("Working config:"));
-
-  tft.setTextColor(0xFFE0);
-  tft.setTextSize(1);
-  tft.setCursor(10, 58);
-  tft.print(configs[idx].label);
-
-  tft.setTextColor(0xFFFF);
-  tft.setCursor(10, 80);
-  tft.print(F("Copy to config.h:"));
-
-  tft.setTextColor(0x07E0);
-  tft.setTextSize(1);
-  char buf[30];
-
-  tft.setCursor(10, 98);
-  snprintf(buf, sizeof(buf), "#define YP A%d", configs[idx].yp - A0);
-  tft.print(buf);
-
-  tft.setCursor(10, 113);
-  snprintf(buf, sizeof(buf), "#define XM A%d", configs[idx].xm - A0);
-  tft.print(buf);
-
-  tft.setCursor(10, 128);
-  snprintf(buf, sizeof(buf), "#define YM %d", configs[idx].ym);
-  tft.print(buf);
-
-  tft.setCursor(10, 143);
-  snprintf(buf, sizeof(buf), "#define XP %d", configs[idx].xp);
-  tft.print(buf);
-
-  // Draw separator
-  tft.drawFastHLine(0, 160, 240, 0x3186);
-
-  tft.setTextColor(0xFFE0);
-  tft.setCursor(10, 170);
-  tft.print(F("Now touch corners to calibrate"));
-  tft.setCursor(10, 185);
-  tft.print(F("Raw X/Y/Z shown below:"));
-
-  // Draw corner targets
-  tft.drawRect(0, 0, 8, 8, 0xF800);
-  tft.drawRect(232, 312, 8, 8, 0xF800);
-
-  tft.setTextColor(0xBDF7);
-  tft.setCursor(10, 290);
-  tft.print(F("Values also on Serial Monitor"));
-  tft.setCursor(10, 305);
-  tft.print(F("Touch 20+ spots for best result"));
-}
-
-void showNotFound() {
-  tft.fillScreen(0x0000);
-  tft.setTextColor(0xF800);
-  tft.setTextSize(2);
-  tft.setCursor(10, 10);
-  tft.print(F("NOT FOUND"));
-
-  tft.setTextColor(0xFFFF);
-  tft.setTextSize(1);
-  tft.setCursor(10, 45);
-  tft.print(F("No touch detected on any"));
-  tft.setCursor(10, 60);
-  tft.print(F("pin configuration."));
-
-  tft.setCursor(10, 90);
-  tft.print(F("Possible causes:"));
-  tft.setCursor(10, 110);
-  tft.print(F("- Shield has no touchscreen"));
   tft.setCursor(10, 125);
-  tft.print(F("- Touchscreen is damaged"));
-  tft.setCursor(10, 140);
-  tft.print(F("- Uses SPI touch (XPT2046)"));
-  tft.setCursor(10, 155);
-  tft.print(F("  not resistive 4-wire"));
+  tft.print(F("--- RAW VALUES ---"));
 
-  tft.setCursor(10, 185);
-  tft.print(F("Press RESET to try again"));
-  tft.setCursor(10, 200);
-  tft.print(F("(hold finger while scanning)"));
+  // Pin config info at bottom
+  tft.setTextColor(0x8410);
+  tft.setCursor(10, 280);
+  tft.print(F("Pins: YP=A"));
+  tft.print(YP - A0);
+  tft.print(F(" XM=A"));
+  tft.print(XM - A0);
+  tft.print(F(" YM="));
+  tft.print(YM);
+  tft.print(F(" XP="));
+  tft.print(XP);
 
-  Serial.println(F("\nNo working configuration found."));
-  Serial.println(F("Make sure you are pressing the screen during scanning."));
-  Serial.println(F("Press RESET on Arduino to try again."));
+  tft.setCursor(10, 295);
+  tft.print(F("No touch? Try other pin option"));
+  tft.setCursor(10, 308);
+  tft.print(F("in sketch & re-upload."));
 }
 
-// ---- PHASE 2: Live calibration mode ----
 void loop() {
-  if (foundConfig < 0) {
-    delay(1000);
-    return;  // stuck on "not found" screen
-  }
-
-  // Read touch with the working config
-  TouchScreen ts(configs[foundConfig].xp, configs[foundConfig].yp,
-                 configs[foundConfig].xm, configs[foundConfig].ym, 300);
-
+  // Read touch
   TSPoint tp = ts.getPoint();
 
-  // Restore pin modes
-  pinMode(configs[foundConfig].xm, OUTPUT);
-  pinMode(configs[foundConfig].yp, OUTPUT);
+  // CRITICAL: restore shared pin modes for LCD
+  pinMode(XM, OUTPUT);
+  pinMode(YP, OUTPUT);
 
   if (tp.z > PRESSURE_MIN && tp.z < PRESSURE_MAX) {
-    // Clear value display area
-    tft.fillRect(0, 205, 240, 80, 0x0000);
+    // Clear value area on screen
+    tft.fillRect(0, 138, 240, 130, 0x0000);
 
-    // Show raw values
-    tft.setTextColor(0xFFFF);
-    tft.setTextSize(2);
+    // Display on screen
+    tft.setTextColor(0xFFFF, 0x0000);
+    tft.setTextSize(3);
 
-    tft.setCursor(10, 208);
-    tft.print(F("X:"));
+    tft.setCursor(10, 140);
+    tft.print(F("X: "));
     tft.print(tp.x);
-    tft.print(F("   "));
+    tft.print(F("    "));
 
-    tft.setCursor(10, 230);
-    tft.print(F("Y:"));
+    tft.setCursor(10, 175);
+    tft.print(F("Y: "));
     tft.print(tp.y);
-    tft.print(F("   "));
+    tft.print(F("    "));
 
-    tft.setCursor(10, 252);
-    tft.print(F("Z:"));
+    tft.setCursor(10, 210);
+    tft.setTextSize(2);
+    tft.print(F("Z: "));
     tft.print(tp.z);
     tft.print(F("   "));
 
-    // Show sample count
+    // Sample counter
     tft.setTextSize(1);
     tft.setTextColor(0xBDF7);
-    tft.setCursor(160, 270);
-    tft.print(F("#"));
+    tft.setCursor(10, 245);
+    tft.print(F("Sample #"));
     tft.print(sampleCount + 1);
-    tft.print(F("  "));
+    tft.print(F("    "));
 
-    // Serial output
+    // Print to Serial
     Serial.print(F("X="));
     Serial.print(tp.x);
-    Serial.print(F("  Y="));
+    Serial.print(F("\tY="));
     Serial.print(tp.y);
-    Serial.print(F("  Z="));
+    Serial.print(F("\tZ="));
     Serial.println(tp.z);
 
     // Track min/max
@@ -350,10 +189,28 @@ void loop() {
     if (tp.y > maxY) maxY = tp.y;
     sampleCount++;
 
-    // Print calibration results after enough samples
+    // Show calibration values on screen after enough samples
+    if (sampleCount >= 20) {
+      tft.setTextSize(1);
+      tft.setTextColor(0x07E0);
+      tft.setCursor(10, 258);
+      tft.print(F("X:"));
+      tft.print(minX);
+      tft.print(F("-"));
+      tft.print(maxX);
+      tft.print(F("  Y:"));
+      tft.print(minY);
+      tft.print(F("-"));
+      tft.print(maxY);
+      tft.print(F("    "));
+    }
+
+    // Print calibration results to Serial every 10 samples after 20
     if (sampleCount >= 20 && sampleCount % 10 == 0) {
-      Serial.println(F("\n===== CALIBRATION VALUES ====="));
-      Serial.println(F("Copy these into config.h:\n"));
+      Serial.println();
+      Serial.println(F("===== CALIBRATION VALUES ====="));
+      Serial.println(F("Copy these into config.h:"));
+      Serial.println();
       Serial.print(F("#define TS_LEFT    "));
       Serial.println(minX);
       Serial.print(F("#define TS_RIGHT   "));
@@ -362,7 +219,18 @@ void loop() {
       Serial.println(minY);
       Serial.print(F("#define TS_BOTTOM  "));
       Serial.println(maxY);
-      Serial.println(F("==============================\n"));
+      Serial.println();
+      Serial.println(F("Also copy pin defines:"));
+      Serial.print(F("#define YP A"));
+      Serial.println(YP - A0);
+      Serial.print(F("#define XM A"));
+      Serial.println(XM - A0);
+      Serial.print(F("#define YM "));
+      Serial.println(YM);
+      Serial.print(F("#define XP "));
+      Serial.println(XP);
+      Serial.println(F("=============================="));
+      Serial.println();
     }
   }
 
