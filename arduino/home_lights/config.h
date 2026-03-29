@@ -6,11 +6,11 @@
 // ================================================================
 //  TOUCH CALIBRATION (from calibration sketch)
 // ================================================================
-#define TS_LEFT    165
-#define TS_RIGHT   941
-#define TS_TOP     167
-#define TS_BOTTOM  945
-#define TS_PRESSURE_MIN 200
+#define TS_LEFT    150
+#define TS_RIGHT   950
+#define TS_TOP     150
+#define TS_BOTTOM  950
+#define TS_PRESSURE_MIN 10
 #define TS_PRESSURE_MAX 1000
 
 // Touch pins (calibrated for this shield)

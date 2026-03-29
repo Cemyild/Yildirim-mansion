@@ -49,7 +49,7 @@ MCUFRIEND_kbv tft;
 
 // ================================================================
 
-#define PRESSURE_MIN 200
+#define PRESSURE_MIN 10
 #define PRESSURE_MAX 1000
 
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
