@@ -8,19 +8,19 @@
 //  Upload arduino/calibration/calibration.ino first to find
 //  the correct values for YOUR specific shield.
 // ================================================================
-#define TS_LEFT    120
-#define TS_RIGHT   900
-#define TS_TOP     70
-#define TS_BOTTOM  920
+#define TS_LEFT    165
+#define TS_RIGHT   941
+#define TS_TOP     167
+#define TS_BOTTOM  945
 #define TS_PRESSURE_MIN 200
 #define TS_PRESSURE_MAX 1000
 
 // Touch pins - update these with values from calibration sketch!
 // Most common for 2.4" shields: YP=A1, XM=A2, YM=7, XP=6
-#define YP A1   // must be analog
-#define XM A2   // must be analog
-#define YM 7    // digital
-#define XP 6    // digital
+#define YP A1
+#define XM A2
+#define YM 7
+#define XP 6
 
 // ================================================================
 //  COLOR THEME (RGB565)
