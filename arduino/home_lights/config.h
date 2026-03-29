@@ -15,11 +15,12 @@
 #define TS_PRESSURE_MIN 10
 #define TS_PRESSURE_MAX 1000
 
-// Touch pins (common for 2.4" ILI9341 shields - adjust if needed)
-#define YP A3   // must be analog
+// Touch pins - update these with values from calibration sketch!
+// Most common for 2.4" shields: YP=A1, XM=A2, YM=7, XP=6
+#define YP A1   // must be analog
 #define XM A2   // must be analog
-#define YM 9    // digital
-#define XP 8    // digital
+#define YM 7    // digital
+#define XP 6    // digital
 
 // ================================================================
 //  COLOR THEME (RGB565)
