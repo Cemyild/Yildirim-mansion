@@ -1,0 +1,52 @@
+{
+  "devices": {
+    "dev_living_ceiling": {
+      "type": "tuya",
+      "name": "Living Room Ceiling",
+      "tuya_id": "YOUR_TUYA_DEVICE_ID",
+      "ip": "192.168.1.50",
+      "local_key": "YOUR_LOCAL_KEY",
+      "version": 3.3,
+      "dps_key": "1"
+    },
+    "dev_living_floor": {
+      "type": "tuya",
+      "name": "Living Room Floor Lamp",
+      "tuya_id": "YOUR_TUYA_DEVICE_ID",
+      "ip": "192.168.1.51",
+      "local_key": "YOUR_LOCAL_KEY",
+      "version": 3.3,
+      "dps_key": "1"
+    },
+    "dev_living_wall": {
+      "type": "virtual",
+      "name": "Living Room Wall Light",
+      "state": false
+    },
+    "dev_bed_main": {
+      "type": "virtual",
+      "name": "Bedroom Main Light",
+      "state": false
+    },
+    "dev_bed_lamp": {
+      "type": "virtual",
+      "name": "Bedroom Lamp",
+      "state": false
+    },
+    "dev_kitchen_main": {
+      "type": "virtual",
+      "name": "Kitchen Main Light",
+      "state": false
+    },
+    "dev_kitchen_counter": {
+      "type": "virtual",
+      "name": "Kitchen Counter Light",
+      "state": false
+    },
+    "dev_bath_mirror": {
+      "type": "virtual",
+      "name": "Bathroom Mirror Light",
+      "state": false
+    }
+  }
+}
