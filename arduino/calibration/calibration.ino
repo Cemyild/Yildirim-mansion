@@ -32,8 +32,9 @@ const PinConfig configs[] = {
 };
 const uint8_t NUM_CONFIGS = sizeof(configs) / sizeof(configs[0]);
 
-#define PRESSURE_MIN 5
-#define PRESSURE_MAX 1200
+#define PRESSURE_MIN 200
+#define PRESSURE_MAX 1000
+#define CONFIRM_READS 3  // require 3 consecutive reads to confirm real touch
 
 // Found config index (-1 = not found yet)
 int8_t foundConfig = -1;
@@ -103,10 +104,42 @@ void scanForTouch() {
     Serial.print(F(": "));
     Serial.println(configs[i].label);
 
-    // Create a TouchScreen with this config and test for 3 seconds
+    // Create a TouchScreen with this config and test for 4 seconds
     TouchScreen testTs(configs[i].xp, configs[i].yp, configs[i].xm, configs[i].ym, 300);
+    uint8_t confirmCount = 0;
 
+    // First, check for false positives WITHOUT touching (1 second)
     unsigned long start = millis();
+    bool falsePositive = false;
+    while (millis() - start < 1000) {
+      TSPoint tp = testTs.getPoint();
+      pinMode(configs[i].xm, OUTPUT);
+      pinMode(configs[i].yp, OUTPUT);
+      if (tp.z > PRESSURE_MIN && tp.z < PRESSURE_MAX) {
+        falsePositive = true;
+        break;
+      }
+      delay(50);
+    }
+    if (falsePositive) {
+      tft.fillRect(10, 145, 220, 20, 0x0000);
+      tft.setTextColor(0xF800);
+      tft.setTextSize(1);
+      tft.setCursor(10, 150);
+      tft.print(F("False reads - skipping"));
+      Serial.println(F("  -> False positives, skipping"));
+      delay(500);
+      continue;
+    }
+
+    // Now prompt user to touch (3 seconds)
+    tft.fillRect(10, 145, 220, 20, 0x0000);
+    tft.setTextColor(0x07E0);
+    tft.setTextSize(2);
+    tft.setCursor(10, 145);
+    tft.print(F("Touch NOW..."));
+
+    start = millis();
     while (millis() - start < 3000) {
       TSPoint tp = testTs.getPoint();
 
@@ -115,7 +148,13 @@ void scanForTouch() {
       pinMode(configs[i].yp, OUTPUT);
 
       if (tp.z > PRESSURE_MIN && tp.z < PRESSURE_MAX) {
-        // Found a working config!
+        confirmCount++;
+      } else {
+        confirmCount = 0;  // reset - need consecutive reads
+      }
+
+      if (confirmCount >= CONFIRM_READS) {
+        // Confirmed real touch!
         foundConfig = i;
 
         Serial.print(F("** FOUND! Config "));

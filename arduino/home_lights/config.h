@@ -12,7 +12,7 @@
 #define TS_RIGHT   900
 #define TS_TOP     70
 #define TS_BOTTOM  920
-#define TS_PRESSURE_MIN 10
+#define TS_PRESSURE_MIN 200
 #define TS_PRESSURE_MAX 1000
 
 // Touch pins - update these with values from calibration sketch!
