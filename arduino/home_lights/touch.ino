@@ -17,8 +17,10 @@ void handleTouch() {
   lastTouchTime = now;
 
   // Map raw touch to screen pixels
-  int16_t px = map(tp.x, TS_LEFT, TS_RIGHT, 0, SCR_W);
-  int16_t py = map(tp.y, TS_TOP, TS_BOTTOM, 0, SCR_H);
+  // tp.y = horizontal (high=left, low=right) → screen X
+  // tp.x = vertical (high=top, low=bottom) → screen Y
+  int16_t px = map(tp.y, TS_LEFT, TS_RIGHT, 0, SCR_W);
+  int16_t py = map(tp.x, TS_TOP, TS_BOTTOM, 0, SCR_H);
 
   px = constrain(px, 0, SCR_W - 1);
   py = constrain(py, 0, SCR_H - 1);

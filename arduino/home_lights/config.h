@@ -6,10 +6,10 @@
 // ================================================================
 //  TOUCH CALIBRATION (from calibration sketch)
 // ================================================================
-#define TS_LEFT    150
-#define TS_RIGHT   950
-#define TS_TOP     150
-#define TS_BOTTOM  950
+#define TS_LEFT    1000   // tp.y at left edge (high value)
+#define TS_RIGHT   600    // tp.y at right edge (low value)
+#define TS_TOP     1020   // tp.x at top edge (high value)
+#define TS_BOTTOM  750    // tp.x at bottom edge (low value)
 #define TS_PRESSURE_MIN 10
 #define TS_PRESSURE_MAX 1000
 
