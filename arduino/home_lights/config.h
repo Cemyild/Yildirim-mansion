@@ -5,8 +5,8 @@
 
 // ================================================================
 //  TOUCH CALIBRATION
-//  Run the "TouchScreen_Calibr_native" example from MCUFRIEND_kbv
-//  library to get the correct values for YOUR specific shield.
+//  Upload arduino/calibration/calibration.ino first to find
+//  the correct values for YOUR specific shield.
 // ================================================================
 #define TS_LEFT    120
 #define TS_RIGHT   900

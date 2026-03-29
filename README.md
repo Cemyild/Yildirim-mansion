@@ -61,18 +61,21 @@ server/
 
 ### 2. Touch Calibration
 
-The touch coordinates vary per shield unit. To calibrate:
+The touch coordinates vary per shield unit. A calibration sketch is included:
 
-1. In Arduino IDE, go to **File > Examples > MCUFRIEND_kbv > TouchScreen_Calibr_native**
-2. Upload and follow instructions on screen
-3. Copy the calibration values into `config.h`:
+1. Open `arduino/calibration/calibration.ino` and upload it
+2. Touch the screen in various spots - raw X, Y, Z values will display
+3. Touch all 4 corners of the screen (at least 20 touches total)
+4. Open **Serial Monitor** (9600 baud) - calibration values will be printed
+5. Copy the values into `config.h`:
    ```cpp
    #define TS_LEFT    <your_value>
    #define TS_RIGHT   <your_value>
    #define TS_TOP     <your_value>
    #define TS_BOTTOM  <your_value>
    ```
-4. If touch is mirrored/rotated, swap `tp.x`/`tp.y` in `touch.ino`
+6. If touch feels mirrored/rotated, swap `tp.x`/`tp.y` in `touch.ino`
+7. If no touch is detected at all, try different pin combinations in `calibration.ino` (Options A/B/C are listed in the file)
 
 ### 3. Customize Rooms & Lights
 
